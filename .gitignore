@@ -4,6 +4,7 @@
 .flaskenv
 *.pyc
 *.pyo
+*.log
 env/
 env*
 dist/
@@ -19,6 +20,7 @@ docs/_build/
 .vscode
 Lib/
 Scripts/
+instance/
 
 # Coverage reports
 htmlcov/
