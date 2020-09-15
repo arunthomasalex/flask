@@ -5,6 +5,8 @@
 *.pyc
 *.pyo
 *.log
+pyvenv.cfg
+venv/
 env/
 env*
 dist/
@@ -19,6 +21,8 @@ _mailinglist
 docs/_build/
 .vscode
 Lib/
+libs/
+Include/
 Scripts/
 instance/
 
