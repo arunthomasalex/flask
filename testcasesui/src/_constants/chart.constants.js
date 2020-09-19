@@ -1,0 +1,5 @@
+export default {
+    GET_DATA: 'GET_DATA',
+    UPDATE_CHART: 'UPDATE_CHART',
+    FAILED_TO_FETCH_DATA: 'FAILED_TO_FETCH_DATA'
+}

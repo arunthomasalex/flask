@@ -1,9 +1,9 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name = 'run',
     version = 0.1,
-    packages=['testcases'],
+    packages= find_packages(exclude='testcasesui'),
     py_modules= ['run'],
     include_package_data=True,
     install_requires=[

@@ -25,6 +25,9 @@ libs/
 Include/
 Scripts/
 instance/
+*/node_modules/
+*/dist/
+package-lock.js
 
 # Coverage reports
 htmlcov/

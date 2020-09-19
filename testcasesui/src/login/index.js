@@ -1,0 +1,1 @@
+module.exports = require('./login-page.jsx')
