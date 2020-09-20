@@ -23,4 +23,4 @@ def run_command(app, initdb, port):
         start_app(app, port)
 
 if __name__ == '__main__':
-    app.run(port=8000, debug=True)
+    app.run(port=5000, debug=True)

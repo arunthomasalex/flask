@@ -56,9 +56,18 @@ def update_settings():
 def test_cases():
     datas = []
     response = []
+    sql = 'SELECT total, completed, passed, dated FROM testcases.testcases'
+    try:
+        year = request.args['year']
+        sql += ' where  dated between DATE(\'{}-01-01 00:00:00\') AND DATE(\'{}-12-31 23:59:59\')'.format(year, year)
+    except:
+        month = (datetime.datetime.now().month % 12) + 1
+        year = datetime.datetime.now().year - 1
+        sql += ' where  dated >= DATE(\'{}-{}-01 00:00:00\')'.format(year, month)
     conn = get_connection()
     with conn.cursor() as cur:
-        cur.execute('SELECT total, completed, passed, dated FROM testcases.testcases')
+        print(sql)
+        cur.execute(sql)
         for testcase in cur:
             datas.append(dict(
                 total = testcase['total'],
@@ -77,7 +86,7 @@ def test_cases():
         data = {}
         data['datas'] = list(map(removeTempValues, group))
         totals = (rec['total'] for rec in data['datas'])
-        completeds = (rec['completed'] for rec in data['datas'])
+        completeds = (rec['completed']  for rec in data['datas'])
         passeds = (rec['passed'] for rec in data['datas'])
         data['dated'] = key
         data['total'] = max(totals)
