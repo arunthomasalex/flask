@@ -5,20 +5,20 @@ export default {
     get
 }
 
-function get(url = '') {
+function get() {
     return dispatch => {
         dispatch(request())
-        chartService.get(url)
+        chartService.getYears()
             .then(
                 data => {
-                    dispatch(update(data));
+                    dispatch(update(data.years));
                 },
                 error => {
                     dispatch(failure());
                 }
             )
     }
-    function request() { return { type: chartConstants.GET_DATA } }
-    function update(data) { return { type: chartConstants.UPDATE_CHART, data } }
-    function failure() { return { type: chartConstants.FAILED_TO_FETCH_DATA } }
+    function request() { return { type: chartConstants.GET_YEARS } }
+    function update(years) { return { type: chartConstants.UPDATED_YEARS, years } }
+    function failure() { return { type: chartConstants.FAILED_TO_FETCH_YEARS } }
 }

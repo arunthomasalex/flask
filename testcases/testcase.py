@@ -45,12 +45,30 @@ def update_settings():
         with conn.cursor() as cur:
             cur.execute("SELECT name, value FROM testcases.settings where name = %s", (key,))
             for setting in cur:
-                return jsonify(dict(
+                data = dict(
                     key = setting['name'],
                     value = setting['value']
-                ))
+                )
+                break
     finally:
-        conn.close()
+        if(conn and conn.open):
+            conn.close()
+    return jsonify(data)
+
+@bp.route('/api/v1/years', methods=['GET'])
+def test_case_years():
+    response = []
+    sql = 'SELECT distinct YEAR(dated) as year FROM testcases'
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            for rec in cur:
+                response.append(rec['year'])
+    finally:
+        if(conn and conn.open):
+            conn.close()
+    return jsonify(dict(years= response))
 
 @bp.route('/api/v1/testcases', methods=['GET'])
 def test_cases():
@@ -64,19 +82,21 @@ def test_cases():
         month = (datetime.datetime.now().month % 12) + 1
         year = datetime.datetime.now().year - 1
         sql += ' where  dated >= DATE(\'{}-{}-01 00:00:00\')'.format(year, month)
-    conn = get_connection()
-    with conn.cursor() as cur:
-        print(sql)
-        cur.execute(sql)
-        for testcase in cur:
-            datas.append(dict(
-                total = testcase['total'],
-                completed = testcase['completed'],
-                passed = testcase['passed'],
-                tempDated = testcase['dated'],
-                dated = testcase['dated'].strftime('%d-%m-%Y')
-            ))
-    conn.close()
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            for testcase in cur:
+                datas.append(dict(
+                    total = testcase['total'],
+                    completed = testcase['completed'],
+                    passed = testcase['passed'],
+                    tempDated = testcase['dated'],
+                    dated = testcase['dated'].strftime('%d-%m-%Y')
+                ))
+    finally:
+        if(conn and conn.open):
+            conn.close()
 
     def removeTempValues(data):
         del data['tempDated']
@@ -128,7 +148,8 @@ def add_test_case():
             conn.cursor().execute(query, parameters)
             conn.commit()
         finally:
-            conn.close()
+            if(conn and conn.open):
+                conn.close()
         return dict(
             success = True
         )
@@ -150,7 +171,8 @@ def login():
             cur.execute('SELECT id, password FROM testcases.user WHERE username = %s', (username,))
             user = cur.fetchone()
     finally:
-        conn.close()
+        if(conn and conn.open):
+            conn.close()
 
     if user is None:
         error = 'Incorrect username.'

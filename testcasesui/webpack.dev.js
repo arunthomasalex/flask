@@ -6,7 +6,7 @@ const FileManagerPlugin = require('filemanager-webpack-plugin');
 module.exports = {
     entry: "./src/index.js",
     output: {
-        filename: 'build.[contentHash].js',
+        filename: 'build.[hash].js',
         path: path.resolve(__dirname, 'dist')
     },
     module:{
