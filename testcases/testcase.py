@@ -118,8 +118,11 @@ def test_cases():
 @bp.route('/api/v1/testcases', methods=['POST'])
 def add_test_case():
     try:
-        completed = int(request.form['completed'])
+        print(request)
+        failed = int(request.form['failed'])
         passed = int(request.form['passed'])
+        completed = failed + passed
+        print(completed)
         dated = datetime.datetime.strptime(request.form['dated'], '%Y%m%d %H:%M:%S.%f').date()
         try:
             conn = get_connection()
