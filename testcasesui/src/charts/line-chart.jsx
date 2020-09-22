@@ -25,7 +25,7 @@ class LineChart extends Component {
                 label: "completed",
                 color: "#34baeb"
             }, {
-                label: "total",
+                label: "target",
                 color: "#060708"
             }
         ];
@@ -46,7 +46,7 @@ class LineChart extends Component {
             let margin = {top: 30, right: 70, bottom: 30, left: 60};
             data = data.datas.map(function(rec) { 
                 const failed = rec['completed'] - rec['passed'];
-                return {dated: rec['dated'], total: rec['total'], completed: rec['completed'], failed: (failed > 0 ? failed : 0), passed: rec['passed']};
+                return {dated: rec['dated'], target: rec['total'], completed: rec['completed'], failed: (failed > 0 ? failed : 0), passed: rec['passed']};
             });
             this.createGraph(margin, data, true);
         } else {
@@ -56,7 +56,7 @@ class LineChart extends Component {
 
     mainGraph() {
         let margin = {top: 30, right: 70, bottom: 50, left: 60};
-        let data = this.actualData.map(function(rec) { return {datas: rec['datas'], dated: rec['dated'], total: rec['total'], completed: rec['completed'], failed: (rec['completed'] - rec['passed']), passed: rec['passed']}});
+        let data = this.actualData.map(function(rec) { return {datas: rec['datas'], dated: rec['dated'], target: rec['total'], completed: rec['completed'], failed: (rec['completed'] - rec['passed']), passed: rec['passed']}});
         this.createGraph(margin, data);
     }
 
@@ -125,7 +125,7 @@ class LineChart extends Component {
 
         // Add Y axis
         const y = d3.scaleLinear()
-            .domain([0, d3.max(data, (d) => d.total)])
+            .domain([0, d3.max(data, (d) => d.target)])
             .range([ height, 0 ]);
 
         const yAxis = d3.axisLeft(y).ticks(5);
@@ -220,7 +220,7 @@ class LineChart extends Component {
     }
 
     render() {
-        const options = this.props.years ? this.props.years.map(year => <option value={year}>{year}</option>) : (<option>{this.state.default}</option>);
+        const options = this.props.years ? this.props.years.map(year => <option key={year} value={year}>{year}</option>) : (<option>{this.state.default}</option>);
         return (
             <div className="chart">
                 <select className="dropdown" onChange={this.yearChange}>
