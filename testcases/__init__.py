@@ -7,7 +7,6 @@ from . import db, auth, testcase
 
 def create_app(test_config = None):
     app = Flask(__name__, static_folder='static', static_url_path='/', instance_relative_config=True)
-    app.config['APPLICATION_ROOT'] = 'testcase'
     CORS(app, resources={r"/api/*": { "origins": "*" }})
 
     app.permanent_session_lifetime = timedelta(minutes=5)
