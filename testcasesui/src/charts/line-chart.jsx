@@ -46,7 +46,7 @@ class LineChart extends Component {
             let margin = {top: 30, right: 70, bottom: 30, left: 60};
             data = data.datas.map(function(rec) { 
                 const failed = rec['completed'] - rec['passed'];
-                return {dated: rec['dated'], target: rec['total'], completed: rec['completed'], failed: (failed > 0 ? failed : 0), passed: rec['passed']};
+                return {dated: rec['dated'], target: rec['target'], completed: rec['completed'], failed: (failed > 0 ? failed : 0), passed: rec['passed']};
             });
             this.createGraph(margin, data, true);
         } else {
@@ -56,7 +56,7 @@ class LineChart extends Component {
 
     mainGraph() {
         let margin = {top: 30, right: 70, bottom: 50, left: 60};
-        let data = this.actualData.map(function(rec) { return {datas: rec['datas'], dated: rec['dated'], target: rec['total'], completed: rec['completed'], failed: (rec['completed'] - rec['passed']), passed: rec['passed']}});
+        let data = this.actualData.map(function(rec) { return {datas: rec['datas'], dated: rec['dated'], target: rec['target'], completed: rec['completed'], failed: (rec['completed'] - rec['passed']), passed: rec['passed']}});
         this.createGraph(margin, data);
     }
 

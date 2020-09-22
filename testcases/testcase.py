@@ -88,7 +88,7 @@ def test_cases():
             cur.execute(sql)
             for testcase in cur:
                 datas.append(dict(
-                    total = testcase['total'],
+                    target = testcase['total'],
                     completed = testcase['completed'],
                     passed = testcase['passed'],
                     tempDated = testcase['dated'],
@@ -105,11 +105,11 @@ def test_cases():
     for key, group in groupby(datas, lambda a: a['tempDated'].strftime('%m-%Y')):
         data = {}
         data['datas'] = list(map(removeTempValues, group))
-        totals = (rec['total'] for rec in data['datas'])
+        targets = (rec['target'] for rec in data['datas'])
         completeds = (rec['completed']  for rec in data['datas'])
         passeds = (rec['passed'] for rec in data['datas'])
         data['dated'] = key
-        data['total'] = max(totals)
+        data['target'] = max(targets)
         data['completed'] = max(completeds)
         data['passed'] = max(passeds)
         response.append(data)
