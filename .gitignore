@@ -5,6 +5,7 @@
 *.pyc
 *.pyo
 *.log
+config.py
 pyvenv.cfg
 venv/
 env/
