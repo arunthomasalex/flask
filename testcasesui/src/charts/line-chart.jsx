@@ -82,7 +82,7 @@ class LineChart extends Component {
             .attr("text-anchor", "middle")  
             .style("font-size", "16px") 
             .style("text-decoration", "underline")  
-            .text(this.title);
+            .text(`${this.title} (${subGraph ? "Monthly" : "Summary"})`);
 
         const dataset = this.lineAttributes.map(attr => {
             return {
@@ -116,12 +116,13 @@ class LineChart extends Component {
             .attr("dy", ".35em")
             .attr("transform", "rotate(45)")
             .style("text-anchor", "start");
-
+        
         svg.append("text")
             .attr("text-anchor", "end")
+            .style("font-weight", "700")
             .attr("x", (width / 2))
-            .attr("y", height + 40)
-            .text("Dates");
+            .attr("y", height + 20)
+            .text(subGraph ? "Days" : "Months");
 
         // Add Y axis
         const y = d3.scaleLinear()
@@ -136,10 +137,11 @@ class LineChart extends Component {
 
         svg.append("text")
             .attr("text-anchor", "end")
+            .style("font-weight", "700")
             .attr("transform", "rotate(-90)")
             .attr("y", -margin.left + 30)
             .attr("x", -(height / 2) + 50)
-            .text("Number of Testcases");
+            .text("# of Testcases");
         
         const drawLine = d3.line().x((d) => x(d.date)).y((d) => y(d.value));
 
@@ -189,9 +191,10 @@ class LineChart extends Component {
                 div.transition()		
                     .style("opacity", .9);		
                 div	.html(`<span class="grid-container"><span class="grid-item">${d.label}:</span><span class="grid-item">${d.value}</span>
-                           <span class="grid-item">Dated:</span><span class="grid-item">${formatDate(d.date)}</span></span>`)	
-                    .style("left", (d3.event.pageX) + "px")		
-                    .style("top", (d3.event.pageY - 28) + "px");	
+                           <span class="grid-item">Dated:</span><span class="grid-item">${formatDate(d.date)}</span>
+                           <span class="grid-row">Click here to ${subGraph ? "go back" : "drill down"}</span></span>`)	
+                    .style("left", (d3.event.pageX - 50) + "px")		
+                    .style("top", (d3.event.pageY - 45) + "px");	
             })					
             .on("mouseout", function(d) {		
                 div.transition()		

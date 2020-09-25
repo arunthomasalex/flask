@@ -15,7 +15,7 @@ div.line_tooltip {
     position: absolute;			
     text-align: center;			
     width: auto;					
-    height: 30px;					
+    height: 45px;					
     padding: 4px 2px 0px 2px;				
     font: 10px sans-serif;		
     background: lightsteelblue;	
@@ -32,6 +32,22 @@ div.line_tooltip {
 
 .grid-item {
     text-align: left;
+}
+
+.grid-row::before {
+    color: red;
+    content: "* ";
+  }
+
+.grid-row {
+    font-style: italic;
+    padding: 2px;
+    grid-column-start: 1; 
+    grid-column-end: 3; 
+}
+
+.note {
+    padding: 50px;
 }
 
 .chart select.dropdown { 
