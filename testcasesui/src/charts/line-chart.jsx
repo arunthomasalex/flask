@@ -2,13 +2,15 @@ import React, { Component } from "react";
 import { connect } from 'react-redux';
 import * as d3 from "d3";
 import { chartAction } from '../_actions';
-import { chartService } from '../_services';
+
+import config from 'config';
 
 import './chart.scss';
 
 class LineChart extends Component {
     constructor(props) {
         super(props);
+        console.log("-----------", props);
         this.state = {
             default: props.years[0]
         }
@@ -35,7 +37,7 @@ class LineChart extends Component {
 
     async componentDidMount() {
         this.title = this.props.title ? this.props.title : "LINE CHART";
-        this.actualData = await chartService.getTestcases();
+        this.actualData = await d3.json(`${config.apiUrl}/testcases`);
         this.mainGraph();
     }
 
@@ -215,9 +217,10 @@ class LineChart extends Component {
     async yearChange(event) {
         event.preventDefault();
         if(event.target.value === this.state.default) {
-            this.actualData = await chartService.getTestcases();
+            this.actualData = await d3.json(`${config.apiUrl}/testcases`);
         } else {
-            this.actualData = await chartService.getTestcases(event.target.value);
+            const year = event.target.value;
+            this.actualData = await d3.json(`${config.apiUrl}/testcases${year ? ('?year=' + year) : ''}`);
         }
         this.mainGraph();
     }
