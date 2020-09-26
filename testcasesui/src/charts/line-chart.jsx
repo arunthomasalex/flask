@@ -157,22 +157,23 @@ class LineChart extends Component {
                 return drawLine(d.values);
             })
         
-        line.append("text")
-            .attr("class","serie_label")
-            .attr("stroke", (d) => d.color)
-            .datum((d) => {
-                return {
-                    id: d.id,
-                    value: d.values[d.values.length - 1]}; 
-                }
-            )
-            .attr("transform", (d) => d.value ? "translate(" + (x(d.value.date)) + "," + (y(d.value.value)) + ")" : "")
-            .attr("x", 5)
-            .style("font-family", "monospace")
-            .style("text-anchor", "start")
-            .style("font-size", "12px")
-            .text((d) => d.id.charAt(0).toUpperCase() + d.id.slice(1));
-        
+        if(dataset) {    
+            line.append("text")
+                .attr("class","serie_label")
+                .attr("stroke", (d) => d.color)
+                .datum((d) => {
+                    return {
+                        id: d.id,
+                        value: d.values[d.values.length - 1]}; 
+                    }
+                )
+                .attr("transform", (d) => "translate(" + (x(d.value.date)) + "," + (y(d.value.value)) + ")")
+                .attr("x", 5)
+                .style("font-family", "monospace")
+                .style("text-anchor", "start")
+                .style("font-size", "12px")
+                .text((d) => d.id.charAt(0).toUpperCase() + d.id.slice(1));
+        }
         svg.selectAll("myDots")
             .data(dataset)
             .enter()
