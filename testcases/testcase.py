@@ -68,20 +68,42 @@ def test_case_years():
     finally:
         if(conn and conn.open):
             conn.close()
-    return jsonify(dict(years= response))
+    return jsonify(response)
+    
+@bp.route('/api/v1/suites', methods=['GET'])
+def test_case_suites():
+    response = []
+    sql = 'SELECT distinct suite as suite FROM testcases order by suite'
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            for rec in cur:
+                response.append(rec['suite'].capitalize() )
+    finally:
+        if(conn and conn.open):
+            conn.close()
+    return jsonify(response)
 
 @bp.route('/api/v1/testcases', methods=['GET'])
 def test_cases():
     datas = []
     response = []
-    sql = 'SELECT total, completed, passed, dated FROM testcases.testcases'
+    try:
+        sql = 'SELECT total, completed, passed, dated FROM testcases.testcases where suite = \'{}\''.format(request.args['suite'])
+    except:
+        sql = 'SELECT total, completed, passed, dated FROM testcases.testcases where suite = (SELECT distinct suite as suite FROM testcases order by suite LIMIT 1)'
+    try:
+        sql += ' and type = \'{}\''.format(request.args['type'])
+    except:
+        pass
     try:
         year = request.args['year']
-        sql += ' where  dated between DATE(\'{}-01-01 00:00:00\') AND DATE(\'{}-12-31 23:59:59\')'.format(year, year)
+        sql += ' and dated between DATE(\'{}-01-01 00:00:00\') AND DATE(\'{}-12-31 23:59:59\')'.format(year, year)
     except:
         month = (datetime.datetime.now().month % 12) + 1
         year = datetime.datetime.now().year - 1
-        sql += ' where  dated >= DATE(\'{}-{}-01 00:00:00\')'.format(year, month)
+        sql += ' and dated >= DATE(\'{}-{}-01 00:00:00\')'.format(year, month)
     try:
         conn = get_connection()
         with conn.cursor() as cur:
@@ -120,13 +142,15 @@ def add_test_case():
     try:
         failed = int(request.form['failed'])
         passed = int(request.form['passed'])
+        scope = request.form['scope']
+        app_type = request.form['app']
         completed = failed + passed
         dated = datetime.datetime.strptime(request.form['dated'], '%Y%m%d %H:%M:%S.%f').date()
         try:
             conn = get_connection()
             try:
             	with conn.cursor() as cur:
-                    cur.execute("SELECT id FROM testcases.testcases WHERE dated = date(%s)", (dated.strftime('%Y-%m-%d'),))
+                    cur.execute("SELECT id FROM testcases.testcases WHERE dated = date(%s) and scope = %s and type = %s", (dated.strftime('%Y-%m-%d'), scope, app_type))
                     testcases = cur.fetchone()
                     query = '''
                         UPDATE testcases.testcases SET completed = %s , passed = %s
@@ -142,10 +166,10 @@ def add_test_case():
                     except TypeError:
                         targeted_count = 0
                     query = '''
-                        INSERT INTO testcases.testcases (total, completed, passed, dated) VALUES
-                        (%s, %s, %s, %s)
+                        INSERT INTO testcases.testcases (total, completed, passed, dated, scope, type) VALUES
+                        (%s, %s, %s, %s, %s, %s)
                     '''
-                    parameters = [ targeted_count, completed, passed, dated.strftime('%Y-%m-%d %H:%M:%S') ]
+                    parameters = [ targeted_count, completed, passed, dated.strftime('%Y-%m-%d %H:%M:%S'), scope, app_type ]
             conn.cursor().execute(query, parameters)
             conn.commit()
         finally:

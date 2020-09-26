@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { connect } from 'react-redux';
 import * as d3 from "d3";
-import { chartAction } from '../_actions';
 
 import config from 'config';
 
@@ -9,13 +8,11 @@ import './chart.scss';
 
 class LineChart extends Component {
     constructor(props) {
-        super(props);
-        console.log("-----------", props);
-        this.state = {
-            default: props.years[0]
-        }
-        props.get();
+        super(); 
         this.lineChart = React.createRef();
+        this.state = {
+            type: props.app_type
+        };
         this.lineAttributes =[
             {
                 label: "passed",
@@ -33,11 +30,12 @@ class LineChart extends Component {
         ];
         this.subGraph = this.subGraph.bind(this);
         this.yearChange = this.yearChange.bind(this);
+        this.suiteChange = this.suiteChange.bind(this);
     }
 
     async componentDidMount() {
         this.title = this.props.title ? this.props.title : "LINE CHART";
-        this.actualData = await d3.json(`${config.apiUrl}/testcases`);
+        this.actualData = await d3.json(`${config.apiUrl}/testcases?type=${this.props.app_type}`);
         this.mainGraph();
     }
 
@@ -168,7 +166,7 @@ class LineChart extends Component {
                     value: d.values[d.values.length - 1]}; 
                 }
             )
-            .attr("transform", (d) => "translate(" + (x(d.value.date)) + "," + (y(d.value.value)) + ")")
+            .attr("transform", (d) => d.value ? "translate(" + (x(d.value.date)) + "," + (y(d.value.value)) + ")" : "")
             .attr("x", 5)
             .style("font-family", "monospace")
             .style("text-anchor", "start")
@@ -214,23 +212,48 @@ class LineChart extends Component {
             .style("opacity", 0);
     }
 
+    createCritera(param) {
+        let params = { ...this.state, ...param };
+        let criteria = Object.entries(params).filter((entry) => entry[1] != null).map(([key, value]) => `${key}=${value}`).join('&')
+        return criteria;
+    }
+
     async yearChange(event) {
         event.preventDefault();
-        if(event.target.value === this.state.default) {
-            this.actualData = await d3.json(`${config.apiUrl}/testcases`);
+        let newParam = null;
+        if(event.target.value === 'Default') {
+            newParam = { year: null };
         } else {
-            const year = event.target.value;
-            this.actualData = await d3.json(`${config.apiUrl}/testcases${year ? ('?year=' + year) : ''}`);
+            newParam = { year: event.target.value };
         }
+        this.actualData = await d3.json(`${config.apiUrl}/testcases?${this.createCritera(newParam)}`);
+        this.setState(newParam);
+        this.mainGraph();
+    }
+
+    async suiteChange(event) {
+        event.preventDefault();
+        let newParam = null;
+        if(event.target.value === '') {
+            newParam = { suite: null };
+        } else {
+            newParam = { suite: event.target.value };
+        }
+        this.actualData = await d3.json(`${config.apiUrl}/testcases?${this.createCritera(newParam)}`);
+        this.setState(newParam);
         this.mainGraph();
     }
 
     render() {
-        const options = this.props.years ? this.props.years.map(year => <option key={year} value={year}>{year}</option>) : (<option>{this.state.default}</option>);
+        const yearOption = this.props.years ? this.props.years.map(year => <option key={year} value={year}>{year}</option>) : (<option>Default</option>);
+        const suiteOption = this.props.suites ? this.props.suites.map(suite => <option key={suite} value={suite}>{suite}</option>) : (<option></option>);
         return (
             <div className="chart">
                 <select className="dropdown" onChange={this.yearChange}>
-                    { options }
+                    { yearOption }
+                </select>
+                <select className="dropdown" onChange={this.suiteChange}>
+                    { suiteOption }
                 </select>
                 <div ref={this.lineChart}></div>
             </div>
@@ -241,13 +264,11 @@ class LineChart extends Component {
 }
 
 function mapState(state) {
-    const { years } = state.chart;
-    return { years };
+    const { years, suites } = state.chart;
+    return { years, suites };
 }
 
-const actionCreators = {
-    get: chartAction.get
-};
+const actionCreators = {};
 
 const connectedLineChart = connect(mapState, actionCreators)(LineChart);
 export default connectedLineChart;

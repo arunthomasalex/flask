@@ -2,6 +2,7 @@ import config from 'config';
 
 export default {
     getYears,
+    getSuites,
     getTestcases
 }
 
@@ -19,6 +20,14 @@ function getYears() {
         method: 'GET'
     };
     return fetch(`${config.apiUrl}/years`, requestOptions)
+            .then(handleResponse);
+}
+
+function getSuites() {
+    const requestOptions = {
+        method: 'GET'
+    };
+    return fetch(`${config.apiUrl}/suites`, requestOptions)
             .then(handleResponse);
 }
 

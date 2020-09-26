@@ -1,0 +1,5 @@
+Will not apply HSTS. The HSTS database must be a regular and non-world-writable file.
+ERROR: could not open HSTS store at '/home/arunalex/.wget-hsts'. HSTS will be disabled.
+--2020-09-26 07:35:13--  https://update.code.visualstudio.com/commit:e5e9e69aed6e1984f7499b7af85b3d05f9a6883a/server-linux-x64/stable
+Resolving update.code.visualstudio.com (update.code.visualstudio.com)... failed: Name or service not known.
+wget: unable to resolve host address ‘update.code.visualstudio.com’
