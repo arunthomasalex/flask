@@ -31,6 +31,3 @@ def create_app(test_config = None):
     app.register_blueprint(testcase.bp)
     app.add_url_rule('/', endpoint='index')
     return app
-
-def init_db():
-    db.init_db_command()
