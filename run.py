@@ -15,12 +15,8 @@ def start_app(app, port):
 @click.command()
 @click.option('--app', help='Name of the application to run.')
 @click.option('--port', default=5000, help='Specify a port for the application to run.', show_default=True)
-@click.option('--initdb', is_flag=True, help='Intialize the db for specified application.')
 def run_command(app, initdb, port):
-    if initdb:
-        initialize_db(app)
-    else:
-        start_app(app, port)
+    start_app(app, port)
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)

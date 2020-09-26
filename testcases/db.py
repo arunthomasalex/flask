@@ -1,5 +1,5 @@
 import pymysql
-from config import ( DB_HOST, DB_USERNAME, DB_PASSWORD, DB,  )
+from config import ( DB_HOST, DB_USERNAME, DB_PASSWORD, DB )
 
 # from flask import current_app, g
 
