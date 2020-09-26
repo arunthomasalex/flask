@@ -5,6 +5,7 @@ from flask import Flask, jsonify, request, render_template, Blueprint, session
 from werkzeug.security import check_password_hash, generate_password_hash
 from itertools import groupby
 
+from .auth import login_required
 from .db import get_connection
 
 bp = Blueprint('testcase', __name__)
@@ -13,6 +14,7 @@ bp = Blueprint('testcase', __name__)
 def index():
     return render_template('index.html')
 
+@login_required
 @bp.route('/api/v1/settings', methods=['GET'])
 def get_settings():
     data = []
@@ -31,6 +33,7 @@ def get_settings():
 
     return jsonify(data)
 
+@login_required
 @bp.route('/api/v1/settings', methods=['PUT'])
 def update_settings():
     data = []
@@ -142,15 +145,15 @@ def add_test_case():
     try:
         failed = int(request.form['failed'])
         passed = int(request.form['passed'])
-        scope = request.form['scope']
-        app_type = request.form['app']
+        suite = request.form['suite']
+        app_type = request.form['type']
         completed = failed + passed
         dated = datetime.datetime.strptime(request.form['dated'], '%Y%m%d %H:%M:%S.%f').date()
         try:
             conn = get_connection()
             try:
             	with conn.cursor() as cur:
-                    cur.execute("SELECT id FROM testcases.testcases WHERE dated = date(%s) and scope = %s and type = %s", (dated.strftime('%Y-%m-%d'), scope, app_type))
+                    cur.execute("SELECT id FROM testcases.testcases WHERE dated = date(%s) and suite = %s and type = %s", (dated.strftime('%Y-%m-%d'), suite, app_type))
                     testcases = cur.fetchone()
                     query = '''
                         UPDATE testcases.testcases SET completed = %s , passed = %s
@@ -166,10 +169,10 @@ def add_test_case():
                     except TypeError:
                         targeted_count = 0
                     query = '''
-                        INSERT INTO testcases.testcases (total, completed, passed, dated, scope, type) VALUES
+                        INSERT INTO testcases.testcases (total, completed, passed, dated, suite, type) VALUES
                         (%s, %s, %s, %s, %s, %s)
                     '''
-                    parameters = [ targeted_count, completed, passed, dated.strftime('%Y-%m-%d %H:%M:%S'), scope, app_type ]
+                    parameters = [ targeted_count, completed, passed, dated.strftime('%Y-%m-%d %H:%M:%S'), suite, app_type ]
             conn.cursor().execute(query, parameters)
             conn.commit()
         finally:

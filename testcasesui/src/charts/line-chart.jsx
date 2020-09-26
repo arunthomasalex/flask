@@ -157,23 +157,27 @@ class LineChart extends Component {
                 return drawLine(d.values);
             })
         
-        if(dataset) {    
-            line.append("text")
-                .attr("class","serie_label")
-                .attr("stroke", (d) => d.color)
-                .datum((d) => {
-                    return {
-                        id: d.id,
-                        value: d.values[d.values.length - 1]}; 
-                    }
-                )
-                .attr("transform", (d) => "translate(" + (x(d.value.date)) + "," + (y(d.value.value)) + ")")
-                .attr("x", 5)
-                .style("font-family", "monospace")
-                .style("text-anchor", "start")
-                .style("font-size", "12px")
-                .text((d) => d.id.charAt(0).toUpperCase() + d.id.slice(1));
-        }
+        line.append("text")
+            .attr("class","serie_label")
+            .attr("stroke", (d) => (d.values[d.values.length - 1]) ? d.color : '#FFFFFF')
+            .datum((d) => {
+                console.log(d)
+                return {
+                    id: d.id,
+                    value: d.values[d.values.length - 1]
+                }; 
+            })
+            .attr("transform", (d) => {
+                try {
+                    return "translate(" + (x(d.value.date)) + "," + (y(d.value.value)) + ")";
+                } catch(e) { }                
+            })
+            .attr("x", 5)
+            .style("font-family", "monospace")
+            .style("text-anchor", "start")
+            .style("font-size", "12px")
+            .text((d) => d.id.charAt(0).toUpperCase() + d.id.slice(1));
+
         svg.selectAll("myDots")
             .data(dataset)
             .enter()
