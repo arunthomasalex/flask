@@ -67,7 +67,6 @@ export default class BarChart extends Component  {
         var stackedData = d3.stack()
             .keys(this.labels)
             (data)
-            //console.log("This is the stack result: ", stackedData)
 
         // Show the areas
         svg

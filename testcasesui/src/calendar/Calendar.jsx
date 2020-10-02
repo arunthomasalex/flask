@@ -47,6 +47,7 @@ class Calendar extends Component {
         this.onDayClick = this.onDayClick.bind(this);
         this.EditableSection = this.EditableSection.bind(this);
         this.state = {
+            submitted: false,
             dateContext: moment(),
             today: moment(),
             showMonthPopup: false,
@@ -235,7 +236,6 @@ class Calendar extends Component {
         let { name, value } = event.target;
         try {
             if(!this.state.today.startOf("day").isSame(selectedDate)) {
-                console.log("entered");
                 this.resetAlert();
                 if(value !== '') {
                     value = parseInt(value)
@@ -290,7 +290,7 @@ class Calendar extends Component {
         const { editContent } = this.state;  
         const value = (field) => editContent[field.key] ? editContent[field.key] : '';
         return this.countFields.map(field => (
-            <div key={field.key} className='form-group'>
+            <div key={field.key} className='fields-group'>
                 <label htmlFor={field.key}>{ field.label }</label>
                 <span>
                     <input type="text" className="form-control" name={field.key} value={value(field)} onChange={ this.handleChange.bind(this) } />
@@ -299,8 +299,7 @@ class Calendar extends Component {
         ));
    }
 
-    handleSubmit(e) {
-        e.preventDefault();
+    submitData() {
         const { calendarDetails } = this.props;
         const { selectedDate, editContent } = this.state;
         if(!this.state.today.startOf("day").isSame(selectedDate)) {
@@ -337,6 +336,11 @@ class Calendar extends Component {
                 }]
             });
         }
+    }
+
+    handleSubmit(e) {
+        e.preventDefault();
+        this.setState({updateMsg: "Are you sure that you want to submit?"});
     }
 
     addAlert() {
@@ -380,7 +384,7 @@ class Calendar extends Component {
                         { this.populateAlert() }
                         { this.populateTarget() }
                         { this.populateCount() }
-                        <div className="form-group">
+                        <div className="form-group" style={{marginTop: "1rem"}}>
                             <button className="btn btn-primary">Submit</button>
                         </div>
                     </form>
@@ -450,7 +454,10 @@ class Calendar extends Component {
         return (
             <div className="grid-container">
                 <div className='grid-item'>
-                    { (() => <b style={{color: 'red'}}>{this.state.calendarErrorMsg}</b>)() }
+                    { (() => {
+                        if(this.state.calendarErrorMsg) 
+                            return <span className="alert-danger" style={{borderRadius: "4px", padding: "6px"}}>{this.state.calendarErrorMsg}</span>;
+                    })()}
                     <table className="calendar">
                         <thead>
                             <tr className="calendar-header">
@@ -493,7 +500,11 @@ class Calendar extends Component {
                         {show}
                     </Modal.Body>
                     <Modal.Footer>
-                    <Button variant="primary" onClick={() => this.setState({updateMsg: ''})}>Ok</Button>
+                    <Button variant="primary" onClick={() => {
+                        this.setState({updateMsg: ''});
+                        this.submitData();
+                    }}>Ok</Button>
+                    <Button variant="primary" onClick={() => this.setState({updateMsg: ''})}>Cancel</Button>
                     </Modal.Footer>
                 </Modal>
             </div>
