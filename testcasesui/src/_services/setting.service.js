@@ -71,7 +71,6 @@ function addCalendarDetails(date, data) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ date, data })
     }
-    console.log(JSON.stringify({ date, data }));
     return fetch(`${config.apiUrl}/calendar`, requestOptions)
         .then(handleResponse);
 }
@@ -95,7 +94,7 @@ function handleResponse(response) {
                 userService.logout();
                 location.reload(true);
             }
-            throw (data && data.message) || response.statusText;
+            return data || response.statusText;
         }
         return data;
     });

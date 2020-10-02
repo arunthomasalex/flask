@@ -15,5 +15,6 @@ function error(message) {
 }
 
 function clear() {
+    console.log("Inside alert action");
     return { type: alertConstants.CLEAR };
 }

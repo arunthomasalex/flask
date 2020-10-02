@@ -91,13 +91,23 @@ def post_calendar_details():
         conn = get_connection()
         date = request.json['date']
         datas = request.json['data']
+        subdata = { 'values': [] }
         with conn.cursor() as cur:
             for data in datas:
                 cur.execute("INSERT into testcases.calendar_details (name, value, dated) values (%s, %s, %s)",
                             [data['name'], data['value'], date, ])
             conn.commit()
+            cur.execute("SELECT id, name, value, dated FROM testcases.calendar_details where dated=%s",
+                        [date, ])
+            for counter in cur:
+                subdata['dated'] = str(counter['dated'])
+                subdata['values'].append(dict(
+                    id = counter['id'],
+                    name = counter['name'],
+                    value = counter['value']))
         return jsonify(dict(
-            message = "Successfully inserted the datas."
+            message = "Successfully inserted the datas.",
+            data = subdata
         )), 201
     except Exception:
         print(traceback.format_exc())
@@ -236,10 +246,19 @@ def add_test_case():
                     parameters = [ completed, passed, testcases['id'] ]
             except TypeError:
                 with conn.cursor() as cur:
-                    cur.execute("SELECT value FROM testcases.settings WHERE name = 'targeted_test_case'")
+                    query = '''
+                        SELECT s.value, SUM(cd.value) AS aggregate 
+                        FROM settings s 
+                        INNER JOIN calendar_details cd 
+                        WHERE s.name = %s AND cd.name = %s AND cd.dated <= %s
+                    '''
+                    field = app_type + "_" + suite + "_"
+                    cur.execute(query, [(field + "target"), (field + "count"), dated.strftime('%Y-%m-%d'), ])
                     try:
                         settings = cur.fetchone()
-                        targeted_count = int(settings['value'])
+                        target = int(settings['value'])
+                        aggregate = 0 if settings['aggregate'] is None else int(settings['aggregate'])
+                        targeted_count = target + aggregate
                     except TypeError:
                         targeted_count = 0
                     query = '''

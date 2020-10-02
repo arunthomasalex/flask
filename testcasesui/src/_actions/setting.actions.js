@@ -77,8 +77,8 @@ function getCalendarDetails(month, year) {
         dispatch(request());
         return settingService.getCalendarDetails(month, year)
             .then(
-                deatils => {
-                    dispatch(success(deatils));
+                details => {
+                    dispatch(success(details));
                 },
                 error => {
                     dispatch(failure(error.toString()));
@@ -95,8 +95,9 @@ function addCalendarDetails(date, data) {
 	return dispatch => {
         dispatch(request());
         return settingService.addCalendarDetails(date, data)
-            .then(deatils => {
-                    dispatch(success());
+            .then(details => {
+                    dispatch(success(details.data));
+                    dispatch(alertActions.success(details.message));
                 },
                 error => {
                     dispatch(failure(error.toString()));
@@ -105,7 +106,7 @@ function addCalendarDetails(date, data) {
             );
     }
     function request() { return { type: settingsConstants.ADD_CALENDAR_REQUEST } }
-    function success() { return { type: settingsConstants.ADD_CALENDAR_SUCCESS } }
+    function success(data) { return { type: settingsConstants.ADD_CALENDAR_SUCCESS, data } }
     function failure(error) { return { type: settingsConstants.ADD_CALENDAR_FAILURE, error } }
 }
 
@@ -114,8 +115,9 @@ function updateCalendarDetails(data) {
         dispatch(request());
         return settingService.updateCalendarDetails(data)
             .then(
-                deatils => {
+                details => {
                     dispatch(success());
+                    dispatch(alertActions.success(details.message));
                 },
                 error => {
                     dispatch(failure(error.toString()));

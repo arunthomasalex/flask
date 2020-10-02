@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import moment from 'moment';
 import { connect } from 'react-redux';
-import { settingAction } from '../_actions';
+import { settingAction, alertActions } from '../_actions';
 import { Modal, Button } from 'react-bootstrap';
 import './calendar.scss';
 
@@ -53,10 +53,6 @@ class Calendar extends Component {
             showYearPopup: false,
             selectedDay: null,
             calendarErrorMsg: ''
-        }
-        if(props.settings) {
-            this.state.targets = props.settings;
-            this.state.submitted = false;
         }
         props.getCalendarDetails(this.months.indexOf(this.month()) + 1, this.year())
         .then(() => this.setState({calendarDetails: this.props.calendarDetails}));
@@ -112,6 +108,7 @@ class Calendar extends Component {
     }
 
     onSelectChange(e, data) {
+        this.resetAlert();
         if(this.year() < this.state.today.year() || (this.year() == this.state.today.year() && this.months.indexOf(data) < this.state.today.month())) {
             this.setState({calendarErrorMsg: 'Cannot navigate to a past month.'});
         } else {
@@ -141,7 +138,7 @@ class Calendar extends Component {
         );
     }
 
-    onChangeMonth(e, month) {
+    onChangeMonth(e) {
         this.setState({
             showMonthPopup: !this.state.showMonthPopup
         });
@@ -150,7 +147,7 @@ class Calendar extends Component {
     MonthNav() {
         return (
             <span className="label-month"
-                onClick={(e)=> {this.onChangeMonth(e, this.month())}}>
+                onClick={(e)=> {this.onChangeMonth(e)}}>
                 {this.month()}
                 {this.state.showMonthPopup &&
                  <this.SelectList data={this.months} />
@@ -175,6 +172,7 @@ class Calendar extends Component {
         })
     }
     onYearChange(e) {
+        this.resetAlert();
         this.setYear(e.target.value);
         this.props.onYearChange && this.props.onYearChange(e, e.target.value);
     }
@@ -209,6 +207,7 @@ class Calendar extends Component {
     }
 
     onDayClick(day) {
+        this.props.clearAlerts();
         const { calendarDetails } = this.state;
         const month = this.months.indexOf(this.month()) + 1;
         const selectedDate = `${this.year()}-${month > 9 ? month : '0' + month}-${day > 9 ? day : '0' + day}`;
@@ -217,6 +216,7 @@ class Calendar extends Component {
                                 .reduce((obj, item) => ({...obj, [item.name]: item.value}), {}) : 
                             {};
         this.setState({
+            alerts: [],
             selectedDay: day,
             selectedDate: selectedDate,
             editContent: {...this.oldValues}
@@ -231,19 +231,25 @@ class Calendar extends Component {
 
     handleChange(event) {
         event.preventDefault();
+        this.resetAlert();
         const { editContent } = this.state;
-        const { name, value } = event.target;
-        editContent[name] = parseInt(value);
-        this.setState({ editContent });
+        let { name, value } = event.target;
+        try {
+            if(value !== '') {
+                value = parseInt(value)
+            }
+            editContent[name] = value;
+            this.setState({ editContent });
+        } catch(e) {
+            console.log("Only numbers are allowed.");
+        }
     }
 
-    outputValues(target, submitted) {
+    outputValues(target) {
         if(target.key === 'targeted_test_case') {
             return(
                 <span>
                     <input type="text" className="form-control" name={target.key} value={target.value} onChange={ this.handleChange.bind(this) } />
-                    {submitted && !target.key &&
-                        <div className="help-block">{target.label} is required field.</div>}
                 </span>
             );
         } else {
@@ -254,13 +260,15 @@ class Calendar extends Component {
     }
 
     populateTarget() {
-        const { targets, submitted } = this.state;
+        const targets = this.props.settings;
         if(targets) {
-            return targets.map(target => {
+            const leftCol = {width: '50%', position: 'absolute'};
+            const rightCol = {width: '50%', position: 'inherit', marginLeft: '125px'};
+            return targets.map((target, i) => {
                 const key = target.key + "_1";
                 return (
-                <div key={key} className={'form-group' + ((submitted && !key) ? ' has-error' : '')}>
-                    <label htmlFor={key}>{target.label}</label>
+                <div key={key} style={ ((i % 2 == 0) ? leftCol : rightCol) }>
+                    <label style={{display: 'block', background: 'chartreuse', borderRadius: '5px', width: 'max-content'}}>{target.label}</label>
                     { ((target) => <span style={{marginLeft: '10px'}}>{ target.value }</span>)(target) }
                 </div>);
             });
@@ -269,10 +277,10 @@ class Calendar extends Component {
     }
 
     populateCount() {
-        const { editContent, submitted } = this.state;  
-        const value = (field) => editContent[field.key] ? editContent[field.key] : 0;
+        const { editContent } = this.state;  
+        const value = (field) => editContent[field.key] ? editContent[field.key] : '';
         return this.countFields.map(field => (
-            <div key={field.key} className={'form-group' + (submitted && !field.key ? ' has-error' : '')}>
+            <div key={field.key} className='form-group'>
                 <label htmlFor={field.key}>{ field.label }</label>
                 <span>
                     <input type="text" className="form-control" name={field.key} value={value(field)} onChange={ this.handleChange.bind(this) } />
@@ -283,10 +291,10 @@ class Calendar extends Component {
 
     handleSubmit(e) {
         e.preventDefault();
-        const { selectedDate, editContent, calendarDetails } = this.state;
-        console.log(calendarDetails);
+        const { calendarDetails } = this.props;
+        const { selectedDate, editContent } = this.state;
         const newValues = Object.entries(editContent)
-                                .filter((entry) => !this.oldValues[entry[0]])
+                                .filter(([key, value]) => !this.oldValues[key] && value)
                                 .map(([key, value]) => {
                                     return {
                                         'name': key, 
@@ -303,24 +311,57 @@ class Calendar extends Component {
                                     };
                                 });
         if(newValues && newValues.length > 0) {
-            console.log(newValues);
-            this.props.addCalendarDetails(selectedDate, newValues);
+            this.props.addCalendarDetails(selectedDate, newValues)
+                .then(() => this.addAlert());
         }
         if(updateValues && updateValues.length > 0) {
-            console.log(updateValues);
-            this.props.updateCalendarDetails(updateValues);
+            this.props.updateCalendarDetails(updateValues)
+            .then(() => this.addAlert());
+        }
+        this.oldValues = { ...this.oldValues, ...editContent };
+    }
+
+    addAlert() {
+        if(this.props.alert) {
+            this.setState({ alerts: this.props.alert });
         }
     }
 
+    resetAlert() {
+        this.props.clearAlerts()
+        this.setState({alerts: []});
+    }
+
+    populateAlert() {
+        const { alerts } = this.state;
+        let alertMsg = ''
+        if(alerts) {
+            alertMsg = alerts.map((alert, index) => {
+                return (
+                    <div key={index} className={ alert.type + " alert-msg" }>
+                        { alert.message }
+                    </div>
+                )
+            });
+        }
+        return (
+            <div className='alert-div'>
+                { alertMsg }
+            </div>
+        )
+    }
+
     EditableSection() {
-        const { targets, selectedDate } = this.state;
+        const { selectedDate } = this.state;
+        const targets = this.props.settings
         if(targets && selectedDate) {
             return (
                 <div className="col-md-6 col-md-offset-3">
                     <h3>Targets</h3>
                     <form name="settings" onSubmit={ this.handleSubmit.bind(this) }>
-                        {this.populateTarget()}
-                        {this.populateCount()}
+                        { this.populateAlert() }
+                        { this.populateTarget() }
+                        { this.populateCount() }
                         <div className="form-group">
                             <button className="btn btn-primary">Submit</button>
                         </div>
@@ -342,10 +383,7 @@ class Calendar extends Component {
 
         let blanks = [];
         for (let i = 0; i < this.firstDayOfMonth(); i++) {
-            blanks.push(<td key={i * 80} className="emptySlot">
-                {""}
-                </td>
-            );
+            blanks.push(<td key={i * 80} className="emptySlot">{""}</td>);
         }
 
         const { calendarDetails } = this.state;
@@ -364,10 +402,9 @@ class Calendar extends Component {
             );
         }
 
-        var totalSlots = [...blanks, ...daysInMonth];
+        const totalSlots = [...blanks, ...daysInMonth];
         let rows = [];
         let cells = [];
-
         totalSlots.forEach((row, i) => {
             if ((i % 7) !== 0) {
                 cells.push(row);
@@ -449,15 +486,16 @@ class Calendar extends Component {
 
 function mapState(state) {
     const { settings, calendarDetails } = state.settings;
-    return { settings, calendarDetails };
+    const { alert } = state;
+    return { settings, calendarDetails, alert };
 }
 
 const actionCreators = {
     getCalendarDetails: settingAction.getCalendarDetails,
     addCalendarDetails: settingAction.addCalendarDetails,
-    updateCalendarDetails: settingAction.updateCalendarDetails
-    // add: settingAction.addTarget,
-    // update: settingAction.updateTarget,
+    updateCalendarDetails: settingAction.updateCalendarDetails,
+    clearAlerts: alertActions.clear
+
 };
 
 const connectedCalendar = connect(mapState, actionCreators)(Calendar);

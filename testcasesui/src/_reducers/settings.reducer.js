@@ -1,3 +1,4 @@
+import { values } from 'd3';
 import { settingsConstants } from '../_constants';
 
 export function settings(state = {}, action) {
@@ -31,6 +32,8 @@ export function settings(state = {}, action) {
         case settingsConstants.ADD_CALENDAR_REQUEST:
             return { ...state, calendarDetailsAdded: false };
         case settingsConstants.ADD_CALENDAR_SUCCESS:
+            const { dated, values } = action.data; 
+            state.calendarDetails[dated] = values;
             return { ...state, calendarDetailsAdded: true };
         case settingsConstants.ADD_CALENDAR_FAILURE:
             return { ...state, calendarDetailsAdded: false };
