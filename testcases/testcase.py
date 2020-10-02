@@ -21,7 +21,7 @@ def get_settings():
     try:
         conn = get_connection()
         with conn.cursor() as cur:
-            cur.execute("SELECT name, label, value FROM testcases.settings")
+            cur.execute("SELECT name, label, value FROM settings")
             for setting in cur:
                 data.append(dict(
                     key = setting['name'],
@@ -42,10 +42,10 @@ def update_settings():
     try:
         conn = get_connection()
         with conn.cursor() as cur:
-            cur.execute("UPDATE testcases.settings set value = %s where name = %s", (value, key))
+            cur.execute("UPDATE settings set value = %s where name = %s", (value, key))
         conn.commit()
         with conn.cursor() as cur:
-            cur.execute("SELECT name, value FROM testcases.settings where name = %s", (key,))
+            cur.execute("SELECT name, value FROM settings where name = %s", (key,))
             for setting in cur:
                 data = dict(
                     key = setting['name'],
@@ -64,7 +64,7 @@ def get_calendar_details():
         data = {}
         conn = get_connection()
         with conn.cursor() as cur:
-            cur.execute("SELECT id, name, value, dated FROM testcases.calendar_details where month(dated)={} and year(dated)={} order by dated"
+            cur.execute("SELECT id, name, value, dated FROM calendar_details where month(dated)={} and year(dated)={} order by dated"
                         .format(request.args['month'], request.args['year']))
             for counter in cur:
                 date = str(counter['dated'])
@@ -94,10 +94,10 @@ def post_calendar_details():
         subdata = { 'values': [] }
         with conn.cursor() as cur:
             for data in datas:
-                cur.execute("INSERT into testcases.calendar_details (name, value, dated) values (%s, %s, %s)",
+                cur.execute("INSERT into calendar_details (name, value, dated) values (%s, %s, %s)",
                             [data['name'], data['value'], date, ])
             conn.commit()
-            cur.execute("SELECT id, name, value, dated FROM testcases.calendar_details where dated=%s",
+            cur.execute("SELECT id, name, value, dated FROM calendar_details where dated=%s",
                         [date, ])
             for counter in cur:
                 subdata['dated'] = str(counter['dated'])
@@ -126,7 +126,7 @@ def put_calendar_details():
         datas = request.json['data']
         with conn.cursor() as cur:
             for data in datas:
-                cur.execute("UPDATE testcases.calendar_details SET value = %s WHERE id = %s",
+                cur.execute("UPDATE calendar_details SET value = %s WHERE id = %s",
                         [data['value'], data['id'], ])
             conn.commit()
         return jsonify(dict(
@@ -177,9 +177,9 @@ def test_cases():
     datas = []
     response = []
     try:
-        sql = 'SELECT total, completed, passed, dated FROM testcases.testcases where suite = \'{}\''.format(request.args['suite'])
+        sql = 'SELECT total, completed, passed, dated FROM testcases where suite = \'{}\''.format(request.args['suite'])
     except:
-        sql = 'SELECT total, completed, passed, dated FROM testcases.testcases where suite = (SELECT distinct suite as suite FROM testcases order by suite LIMIT 1)'
+        sql = 'SELECT total, completed, passed, dated FROM testcases where suite = (SELECT distinct suite as suite FROM testcases order by suite LIMIT 1)'
     try:
         sql += ' and type = \'{}\''.format(request.args['type'])
     except:
@@ -226,21 +226,25 @@ def test_cases():
 
 @bp.route('/api/v1/testcases', methods=['POST'])
 def add_test_case():
+    print("Enetered")
     try:
         failed = int(request.form['failed'])
         passed = int(request.form['passed'])
-        suite = request.form['suite']
-        app_type = request.form['type']
+        suite = request.form['suite'].lower()
+        app_type = request.form['type'].lower()
         completed = failed + passed
         dated = datetime.datetime.strptime(request.form['dated'], '%Y%m%d %H:%M:%S.%f').date()
         try:
             conn = get_connection()
+            target = 0
+            targeted_count = 0
+            field = ''
             try:
             	with conn.cursor() as cur:
-                    cur.execute("SELECT id FROM testcases.testcases WHERE dated = date(%s) and suite = %s and type = %s", (dated.strftime('%Y-%m-%d'), suite, app_type))
+                    cur.execute("SELECT id FROM testcases WHERE dated = date(%s) and suite = %s and type = %s", (dated.strftime('%Y-%m-%d'), suite, app_type))
                     testcases = cur.fetchone()
                     query = '''
-                        UPDATE testcases.testcases SET completed = %s , passed = %s
+                        UPDATE testcases SET completed = %s , passed = %s
                         WHERE id = %s
                     '''
                     parameters = [ completed, passed, testcases['id'] ]
@@ -252,7 +256,7 @@ def add_test_case():
                         INNER JOIN calendar_details cd 
                         WHERE s.name = %s AND cd.name = %s AND cd.dated <= %s
                     '''
-                    field = app_type + "_" + suite + "_"
+                    field = (app_type + "_" + suite + "_").lower()
                     cur.execute(query, [(field + "target"), (field + "count"), dated.strftime('%Y-%m-%d'), ])
                     try:
                         settings = cur.fetchone()
@@ -260,13 +264,16 @@ def add_test_case():
                         aggregate = 0 if settings['aggregate'] is None else int(settings['aggregate'])
                         targeted_count = target + aggregate
                     except TypeError:
-                        targeted_count = 0
+                        pass
                     query = '''
-                        INSERT INTO testcases.testcases (total, completed, passed, dated, suite, type) VALUES
+                        INSERT INTO testcases (total, completed, passed, dated, suite, type) VALUES
                         (%s, %s, %s, %s, %s, %s)
                     '''
                     parameters = [ targeted_count, completed, passed, dated.strftime('%Y-%m-%d %H:%M:%S'), suite, app_type ]
             conn.cursor().execute(query, parameters)
+            conn.cursor().execute("delete from calendar_details where dated <= %s and name = %s", [dated.strftime('%Y-%m-%d'), (field + "count"), ])
+            if target != targeted_count and target is not None:
+                conn.cursor().execute("update settings set value = %s where name = %s", [targeted_count, (field + "target"), ])
             conn.commit()
         finally:
             if(conn and conn.open):
@@ -289,7 +296,7 @@ def login():
     try:
         conn = get_connection()
         with conn.cursor() as cur:
-            cur.execute('SELECT id, password FROM testcases.user WHERE username = %s', (username,))
+            cur.execute('SELECT id, password FROM user WHERE username = %s', (username,))
             user = cur.fetchone()
     finally:
         if(conn and conn.open):

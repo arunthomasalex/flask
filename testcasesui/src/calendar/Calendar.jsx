@@ -221,7 +221,7 @@ class Calendar extends Component {
             selectedDate: selectedDate,
             editContent: {...this.oldValues}
         }, () => {
-            if(this.state.today.startOf("day").isBefore(selectedDate)) {
+            if(this.state.today.startOf("day").isSameOrBefore(selectedDate)) {
                 this.setState({calendarErrorMsg: ''});
             } else {
                 this.setState({calendarErrorMsg: 'Cannot set targets on this date.', selectedDate: undefined});
@@ -231,15 +231,25 @@ class Calendar extends Component {
 
     handleChange(event) {
         event.preventDefault();
-        this.resetAlert();
-        const { editContent } = this.state;
+        const { selectedDate, editContent } = this.state;
         let { name, value } = event.target;
         try {
-            if(value !== '') {
-                value = parseInt(value)
+            if(!this.state.today.startOf("day").isSame(selectedDate)) {
+                console.log("entered");
+                this.resetAlert();
+                if(value !== '') {
+                    value = parseInt(value)
+                }
+                editContent[name] = value;
+                this.setState({ editContent });
+            } else {
+                event.target.value = editContent[name];
+                this.setState({ alerts: [{
+                        type: "alert-danger",
+                        message: "Cannot change the data on this date."
+                    }]
+                });
             }
-            editContent[name] = value;
-            this.setState({ editContent });
         } catch(e) {
             console.log("Only numbers are allowed.");
         }
@@ -293,32 +303,40 @@ class Calendar extends Component {
         e.preventDefault();
         const { calendarDetails } = this.props;
         const { selectedDate, editContent } = this.state;
-        const newValues = Object.entries(editContent)
-                                .filter(([key, value]) => !this.oldValues[key] && value)
-                                .map(([key, value]) => {
-                                    return {
-                                        'name': key, 
-                                        'value': value
-                                    }
-                                });
-        const updateValues = Object.entries(editContent)
-                                .filter(([key, value]) => this.oldValues[key] && (this.oldValues[key] !== value))
-                                .map(([key, value]) => { 
-                                    return {
-                                        'id': calendarDetails[selectedDate].find(({name}) => name === key).id, 
-                                        'name': key, 
-                                        'value': value
-                                    };
-                                });
-        if(newValues && newValues.length > 0) {
-            this.props.addCalendarDetails(selectedDate, newValues)
+        if(!this.state.today.startOf("day").isSame(selectedDate)) {
+            const newValues = Object.entries(editContent)
+                                    .filter(([key, value]) => !this.oldValues[key] && value)
+                                    .map(([key, value]) => {
+                                        return {
+                                            'name': key, 
+                                            'value': value
+                                        }
+                                    });
+            const updateValues = Object.entries(editContent)
+                                    .filter(([key, value]) => this.oldValues[key] && (this.oldValues[key] !== value))
+                                    .map(([key, value]) => { 
+                                        return {
+                                            'id': calendarDetails[selectedDate].find(({name}) => name === key).id, 
+                                            'name': key, 
+                                            'value': value
+                                        };
+                                    });
+            if(newValues && newValues.length > 0) {
+                this.props.addCalendarDetails(selectedDate, newValues)
+                    .then(() => this.addAlert());
+            }
+            if(updateValues && updateValues.length > 0) {
+                this.props.updateCalendarDetails(updateValues)
                 .then(() => this.addAlert());
+            }
+            this.oldValues = { ...this.oldValues, ...editContent };
+        } else {
+            this.setState({ alerts: [{
+                    type: "alert-danger",
+                    message: "Cannot submit the data on this date."
+                }]
+            });
         }
-        if(updateValues && updateValues.length > 0) {
-            this.props.updateCalendarDetails(updateValues)
-            .then(() => this.addAlert());
-        }
-        this.oldValues = { ...this.oldValues, ...editContent };
     }
 
     addAlert() {
