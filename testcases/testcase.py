@@ -75,10 +75,11 @@ def get_calendar_details():
                         name = counter['name'],
                         value = counter['value']))
         return jsonify(data)
-    except Exception as e:
+    except Exception:
+        print(traceback.format_exc())
         return jsonify(dict(
             message = "Parameters not valid."
-        ))
+        )), 500
     finally:
         if(conn and conn.open):
             conn.close()
@@ -98,8 +99,8 @@ def post_calendar_details():
         return jsonify(dict(
             message = "Successfully inserted the datas."
         )), 201
-    except Exception as e:
-        print(e)
+    except Exception:
+        print(traceback.format_exc())
         return jsonify(dict(
             message = "Parameters not valid."
         )), 500
@@ -121,8 +122,8 @@ def put_calendar_details():
         return jsonify(dict(
             message = "Successfully updated the datas."
         )), 202
-    except Exception as e:
-        print(e)
+    except Exception:
+        print(traceback.format_exc())
         return jsonify(dict(
             message = "Parameters not valid."
         )), 500
