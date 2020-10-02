@@ -44,7 +44,6 @@ def update_settings():
         with conn.cursor() as cur:
             cur.execute("UPDATE testcases.settings set value = %s where name = %s", (value, key))
         conn.commit()
-        
         with conn.cursor() as cur:
             cur.execute("SELECT name, value FROM testcases.settings where name = %s", (key,))
             for setting in cur:
@@ -57,6 +56,80 @@ def update_settings():
         if(conn and conn.open):
             conn.close()
     return jsonify(data)
+
+@login_required
+@bp.route('/api/v1/calendar', methods=['GET'])
+def get_calendar_details():
+    try:
+        data = {}
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, name, value, dated FROM testcases.calendar_details where month(dated)={} and year(dated)={} order by dated"
+                        .format(request.args['month'], request.args['year']))
+            for counter in cur:
+                date = str(counter['dated'])
+                if date not in  data:
+                    data[date] = []
+                data[date].append(dict(
+                        id = counter['id'],
+                        name = counter['name'],
+                        value = counter['value']))
+        return jsonify(data)
+    except Exception as e:
+        return jsonify(dict(
+            message = "Parameters not valid."
+        ))
+    finally:
+        if(conn and conn.open):
+            conn.close()
+
+@login_required
+@bp.route('/api/v1/calendar', methods=['POST'])
+def post_calendar_details():
+    try:
+        conn = get_connection()
+        date = request.json['date']
+        datas = request.json['data']
+        with conn.cursor() as cur:
+            for data in datas:
+                cur.execute("INSERT into testcases.calendar_details (name, value, dated) values (%s, %s, %s)",
+                            [data['name'], data['value'], date, ])
+            conn.commit()
+        return jsonify(dict(
+            message = "Successfully inserted the datas."
+        )), 201
+    except Exception as e:
+        print(e)
+        return jsonify(dict(
+            message = "Parameters not valid."
+        )), 500
+    finally:
+        if(conn and conn.open):
+            conn.close()
+
+@login_required
+@bp.route('/api/v1/calendar', methods=['PUT'])
+def put_calendar_details():
+    try:
+        conn = get_connection()
+        datas = request.json['data']
+        with conn.cursor() as cur:
+            for data in datas:
+                cur.execute("UPDATE testcases.calendar_details SET value = %s WHERE id = %s",
+                        [data['value'], data['id'], ])
+            conn.commit()
+        return jsonify(dict(
+            message = "Successfully updated the datas."
+        )), 202
+    except Exception as e:
+        print(e)
+        return jsonify(dict(
+            message = "Parameters not valid."
+        )), 500
+    finally:
+        if(conn and conn.open):
+            conn.close()
+    return jsonify('success');  
 
 @bp.route('/api/v1/years', methods=['GET'])
 def test_case_years():

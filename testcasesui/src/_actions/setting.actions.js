@@ -4,16 +4,19 @@ import { settingsConstants } from '../_constants';
 const { default: alertActions } = require('./alert.actions');
 
 export default {
-    get,
-    add,
-    update,
-    delete: _delete
+    getTarget,
+    addTarget,
+    updateTarget,
+    getCalendarDetails,
+    addCalendarDetails,
+    updateCalendarDetails,
+    // deleteCalendarDetails
 };
 
-function get(key = '') {
+function getTarget(key = '') {
     return dispatch => {
         dispatch(request());
-        settingService.get(key)
+        settingService.getTarget(key)
             .then(
                 settings => {
                     dispatch(success(settings));
@@ -29,10 +32,10 @@ function get(key = '') {
     function failure(error) { return { type: settingsConstants.GET_SETTING_FAILURE, error } }
 }
 
-function add(key, value) {
+function addTarget(key, value) {
     return dispatch => {
         dispatch(request({ key, value }));
-        settingService.add(key, value)
+        settingService.addTarget(key, value)
             .then(
                 setting => {
                     dispatch(success(setting));
@@ -48,10 +51,10 @@ function add(key, value) {
     function failure(error) { return { type: settingsConstants.ADD_SETTING_FAILURE, error } }
 }
 
-function update(key, value ) {
+function updateTarget(key, value ) {
     return dispatch => new Promise((resolve, reject) => {
         dispatch(request());
-        settingService.update(key, value)
+        settingService.updateTarget(key, value)
             .then(
                 setting => {
                     dispatch(success(setting));
@@ -69,23 +72,58 @@ function update(key, value ) {
     function failure(error) { return { type: settingsConstants.UPDATE_SETTING_FAILURE, error } }
 }
 
-function _delete(key) {
-    return dispatch => new Promise((resolve, reject) => {
-        dispatch(request({ key }));
-        settingService.delete(key)
+function getCalendarDetails(month, year) {
+	return dispatch => {
+        dispatch(request());
+        return settingService.getCalendarDetails(month, year)
             .then(
-                setting => {
-                    dispatch(success(setting));
-                    resolve();
+                deatils => {
+                    dispatch(success(deatils));
                 },
                 error => {
                     dispatch(failure(error.toString()));
                     dispatch(alertActions.error(error.toString()));
-                    reject();
                 }
             )
-    });
-    function request(settings) { return { type: settingsConstants.DELETE_SETTING_REQUEST, settings } }
-    function success(settings) { return { type: settingsConstants.DELETE_SETTING_SUCCESS, settings } }
-    function failure(error) { return { type: settingsConstants.DELETE_SETTING_FAILURE, error } }
+    }
+    function request() { return { type: settingsConstants.GET_CALENDAR_REQUEST } }
+    function success(calendarDetails) { return { type: settingsConstants.GET_CALENDAR_SUCCESS, calendarDetails } }
+    function failure(error) { return { type: settingsConstants.GET_CALENDAR_FAILURE, error } }
+}
+
+function addCalendarDetails(date, data) {
+	return dispatch => {
+        dispatch(request());
+        return settingService.addCalendarDetails(date, data)
+            .then(deatils => {
+                    dispatch(success());
+                },
+                error => {
+                    dispatch(failure(error.toString()));
+                    dispatch(alertActions.error(error.toString()));
+                }
+            );
+    }
+    function request() { return { type: settingsConstants.ADD_CALENDAR_REQUEST } }
+    function success() { return { type: settingsConstants.ADD_CALENDAR_SUCCESS } }
+    function failure(error) { return { type: settingsConstants.ADD_CALENDAR_FAILURE, error } }
+}
+
+function updateCalendarDetails(data) {
+	return dispatch => {
+        dispatch(request());
+        return settingService.updateCalendarDetails(data)
+            .then(
+                deatils => {
+                    dispatch(success());
+                },
+                error => {
+                    dispatch(failure(error.toString()));
+                    dispatch(alertActions.error(error.toString()));
+                }
+            );
+    }
+    function request() { return { type: settingsConstants.UPDATE_CALENDAR_REQUEST } }
+    function success() { return { type: settingsConstants.UPDATE_CALENDAR_SUCCESS } }
+    function failure(error) { return { type: settingsConstants.UPDATE_CALENDAR_FAILURE, error } }
 }

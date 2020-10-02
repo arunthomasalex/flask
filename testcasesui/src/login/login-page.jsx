@@ -6,8 +6,8 @@ import { userActions, settingAction } from '../_actions';
 
 class LoginPage extends Component {
     constructor(props) {
-        super(props);
-        this.props.logout(this.props.changeStatus);
+        super();
+        props.logout(props.changeStatus);
         this.state = {
             username: '',
             password: '',
@@ -77,7 +77,7 @@ function mapState(state) {
 const actionCreators = {
     login: userActions.login,
     logout: userActions.logout,
-    loadSettings: settingAction.get
+    loadSettings: settingAction.getTarget
 };
 
 const connectedLoginPage = connect(mapState, actionCreators)(LoginPage);

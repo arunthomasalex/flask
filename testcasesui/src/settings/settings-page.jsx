@@ -2,10 +2,13 @@ import React, { Component } from "react";
 import { settingAction } from '../_actions';
 import { connect } from 'react-redux';
 import { Redirect } from 'react-router-dom';
+import Calender from '../calendar';
+
+import './settings.scss';
 
 class SettingsPage extends Component {
     constructor(props) {
-        super(props);
+        super();
         this.oldValues = {};
         if(props.settings) {
             props.settings.reduce((result, item) => {
@@ -75,15 +78,16 @@ class SettingsPage extends Component {
             return <Redirect to={this.state.redirect} />
         }
         return(
-            <div className="col-md-6 col-md-offset-3">
-                <h2>Settings</h2>
-                <form name="settings" onSubmit={ this.handleSubmit.bind(this) }>
-                    {this.populateSettings()}
-                    <div className="form-group">
-                        <button className="btn btn-primary">Update</button>
-                    </div>
-                </form>
-            </div>
+                <Calender></Calender>
+                // <div>
+                //     <h2>Settings</h2>
+                //     <form name="settings" onSubmit={ this.handleSubmit.bind(this) }>
+                //         {this.populateSettings()}
+                //         <div className="form-group">
+                //             <button className="btn btn-primary">Update</button>
+                //         </div>
+                //     </form>
+                // </div>
         )
     }
 }
@@ -93,12 +97,7 @@ function mapState(state) {
     return { settings };
 }
 
-const actionCreators = {
-    get: settingAction.get,
-    add: settingAction.add,
-    update: settingAction.update,
-    delete: settingAction.delete
-};
+const actionCreators = {};
 
 const connectedSettingsPage = connect(mapState, actionCreators)(SettingsPage);
 export default connectedSettingsPage;

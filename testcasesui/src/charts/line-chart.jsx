@@ -161,7 +161,6 @@ class LineChart extends Component {
             .attr("class","serie_label")
             .attr("stroke", (d) => (d.values[d.values.length - 1]) ? d.color : '#FFFFFF')
             .datum((d) => {
-                console.log(d)
                 return {
                     id: d.id,
                     value: d.values[d.values.length - 1]
