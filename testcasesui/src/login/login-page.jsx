@@ -11,7 +11,8 @@ class LoginPage extends Component {
         this.state = {
             username: '',
             password: '',
-            submitted: false
+            submitted: false,
+            errorMsg: ''
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -27,10 +28,14 @@ class LoginPage extends Component {
         this.setState({ submitted: true });
         const { username, password } = this.state;
         if (username && password) {
-            this.props.login(username, password).then(() => {
+            this.props.login(username, password)
+            .then(() => {
                 this.props.changeStatus();
                 this.props.loadSettings();
                 this.props.history.push('/');
+            })
+            .catch((error) => {
+                this.setState({ errorMsg: error })
             });
         }
     }
@@ -41,6 +46,13 @@ class LoginPage extends Component {
         return (
             <div className="col-md-6 col-md-offset-3">
                 <h2>Login</h2>
+                {(() => {
+                    if(this.state.errorMsg) {
+                        return <div style={{ borderRadius: '4px' }} className="alert-danger">
+                            {this.state.errorMsg}
+                        </div>
+                    }
+                })()}
                 <form name="form" onSubmit={this.handleSubmit}>
                     <div className={'form-group' + (submitted && !username ? ' has-error' : '')}>
                         <label htmlFor="username">Username</label>

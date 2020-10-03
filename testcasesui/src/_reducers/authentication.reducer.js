@@ -7,13 +7,12 @@ export function authentication(state = initialState, action) {
   switch (action.type) {
     case userConstants.LOGIN_REQUEST:
       return {
-        loggingIn: true,
-        user: action.user
+        loggedIn: false
       };
     case userConstants.LOGIN_SUCCESS:
       return {
         loggedIn: true,
-        user: action.user
+        user: action.data
       };
     case userConstants.LOGIN_FAILURE:
       return {};

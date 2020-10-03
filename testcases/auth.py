@@ -66,9 +66,9 @@ def login():
                 cur.execute('SELECT id, password FROM testcases.user WHERE username = %s', (username,))
                 user = cur.fetchone()
                 if user is None:
-                    error = 'Incorrect username.'
+                    error = 'Incorrect Username or Password.'
                 elif not check_password_hash(user['password'], password):
-                    error = 'Incorrect password.'
+                    error = 'Incorrect Username or Password.'
         finally:
             conn.close()
 

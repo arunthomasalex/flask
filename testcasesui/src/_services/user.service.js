@@ -20,9 +20,13 @@ function login(username, password) {
 
     return fetch(`${config.authUrl}/login`, requestOptions)
         .then(handleResponse)
-        .then(user => {
-            localStorage.setItem('user', JSON.stringify(user));
-            return user;
+        .then(data => {
+            if(data.success) {
+                localStorage.setItem('user', JSON.stringify(data));
+                return data;
+            } else {
+                throw data.message;
+            }
         });
 }
 

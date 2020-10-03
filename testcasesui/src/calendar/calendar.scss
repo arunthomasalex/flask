@@ -95,12 +95,6 @@ tr {
     right:3px;
 }
 
-.prev {
-}
-
-.next {
-}
-
 .editor-year {
     max-width: 3.6em;
 }
@@ -117,7 +111,6 @@ tr {
 .grid-container {
     display: grid;
     grid-template-columns: auto auto;
-    margin: 0px 0px -4px 0px
 }
 
 .grid-item {

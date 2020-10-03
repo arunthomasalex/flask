@@ -14,24 +14,23 @@ export default {
 };
 
 function login(username, password) {
-    return dispatch => new Promise((resolve, reject) => {
-        dispatch(request({ username }));
-        userService.login(username, password)
+    return dispatch => {
+        dispatch(request());
+        return userService.login(username, password)
             .then(
-                user => { 
-                    dispatch(success(user));
-                    resolve()
+                data => {
+                    dispatch(success(data));
                 },
                 error => {
                     dispatch(failure(error.toString()));
                     dispatch(alertActions.error(error.toString()));
-                    reject();
+                    throw error.toString();
                 }
             );
-    });
+    };
 
-    function request(user) { return { type: userConstants.LOGIN_REQUEST, user } }
-    function success(user) { return { type: userConstants.LOGIN_SUCCESS, user } }
+    function request() { return { type: userConstants.LOGIN_REQUEST } }
+    function success(data) { return { type: userConstants.LOGIN_SUCCESS, data } }
     function failure(error) { return { type: userConstants.LOGIN_FAILURE, error } }
 }
 
