@@ -226,7 +226,6 @@ def test_cases():
 
 @bp.route('/api/v1/testcases', methods=['POST'])
 def add_test_case():
-    print("Enetered")
     try:
         failed = int(request.form['failed'])
         passed = int(request.form['passed'])
@@ -256,8 +255,8 @@ def add_test_case():
                         INNER JOIN calendar_details cd 
                         WHERE s.name = %s AND cd.name = %s AND cd.dated <= %s
                     '''
-                    field = (app_type + "_" + suite + "_").lower()
-                    cur.execute(query, [(field + "target"), (field + "count"), dated.strftime('%Y-%m-%d'), ])
+                    field = (app_type + "_" + suite).lower()
+                    cur.execute(query, [(field), (field), dated.strftime('%Y-%m-%d'), ])
                     try:
                         settings = cur.fetchone()
                         target = int(settings['value'])
@@ -271,9 +270,9 @@ def add_test_case():
                     '''
                     parameters = [ targeted_count, completed, passed, dated.strftime('%Y-%m-%d %H:%M:%S'), suite, app_type ]
             conn.cursor().execute(query, parameters)
-            conn.cursor().execute("delete from calendar_details where dated <= %s and name = %s", [dated.strftime('%Y-%m-%d'), (field + "count"), ])
+            conn.cursor().execute("delete from calendar_details where dated <= %s and name = %s", [dated.strftime('%Y-%m-%d'), (field), ])
             if target != targeted_count and target is not None:
-                conn.cursor().execute("update settings set value = %s where name = %s", [targeted_count, (field + "target"), ])
+                conn.cursor().execute("update settings set value = %s where name = %s", [targeted_count, (field), ])
             conn.commit()
         finally:
             if(conn and conn.open):

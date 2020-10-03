@@ -3,22 +3,23 @@ import moment from 'moment';
 import { connect } from 'react-redux';
 import { settingAction, alertActions } from '../_actions';
 import { Modal, Button } from 'react-bootstrap';
+import { Target } from './components';
 import './calendar.scss';
 
 class Calendar extends Component {
     constructor(props) {
         super();
         this.countFields = [{
-            key:'ui_smoke_count',
+            key:'ui_smoke',
             label: 'UI Smoke Count'
         },{
-            key:'ui_regression_count',
+            key:'ui_regression',
             label: 'UI Regression Count'
         }, {
-            key:'headless_smoke_count',
+            key:'headless_smoke',
             label: 'Headless Smoke Count'
         }, {
-            key:'headless_regression_count',
+            key:'headless_regression',
             label: 'Headless Regression Count'
         }]
         this.oldValues = undefined;
@@ -46,8 +47,9 @@ class Calendar extends Component {
         this.YearNav = this.YearNav.bind(this);
         this.onDayClick = this.onDayClick.bind(this);
         this.EditableSection = this.EditableSection.bind(this);
+        this.Alert = this.Alert.bind(this);
+        this.Edit = this.Edit.bind(this);
         this.state = {
-            submitted: false,
             dateContext: moment(),
             today: moment(),
             showMonthPopup: false,
@@ -55,8 +57,7 @@ class Calendar extends Component {
             selectedDay: null,
             calendarErrorMsg: ''
         }
-        props.getCalendarDetails(this.months.indexOf(this.month()) + 1, this.year())
-        .then(() => this.setState({calendarDetails: this.props.calendarDetails}));
+        props.getCalendarDetails(this.months.indexOf(this.month()) + 1, this.year());
     }
 
     year() {
@@ -113,8 +114,7 @@ class Calendar extends Component {
         if(this.year() < this.state.today.year() || (this.year() == this.state.today.year() && this.months.indexOf(data) < this.state.today.month())) {
             this.setState({calendarErrorMsg: 'Cannot navigate to a past month.'});
         } else {
-            this.props.getCalendarDetails(this.months.indexOf(data) + 1, this.year())
-                .then(() => this.setState({calendarDetails: this.props.calendarDetails}));
+            this.props.getCalendarDetails(this.months.indexOf(data) + 1, this.year());
             this.setState({calendarErrorMsg: ''});
             this.setMonth(data);
             this.props.onMonthChange && this.props.onMonthChange();
@@ -131,7 +131,6 @@ class Calendar extends Component {
                 </div>
             );
         });
-
         return (
             <div className="month-popup">
                 {popup}
@@ -164,8 +163,7 @@ class Calendar extends Component {
     }
 
     setYear(year) {
-        this.props.getCalendarDetails(this.months.indexOf(this.month()) + 1, year)
-            .then(() => this.setState({calendarDetails: this.props.calendarDetails}));
+        this.props.getCalendarDetails(this.months.indexOf(this.month()) + 1, year);
         let dateContext = Object.assign({}, this.state.dateContext);
         dateContext = moment(dateContext).set("year", year);
         this.setState({
@@ -183,7 +181,7 @@ class Calendar extends Component {
             this.setYear(e.target.value);
             this.setState({
                 showYearNav: false
-            })
+            });
         }
     }
 
@@ -196,6 +194,7 @@ class Calendar extends Component {
                 ref={(yearInput) => { this.yearInput = yearInput}}
                 onKeyUp= {(e) => this.onKeyUpYear(e)}
                 onChange = {(e) => this.onYearChange(e)}
+                onPointerOut = {(e) => this.setState({showYearNav: false})}
                 type="number"
                 placeholder="year"/>
             :
@@ -209,7 +208,7 @@ class Calendar extends Component {
 
     onDayClick(day) {
         this.props.clearAlerts();
-        const { calendarDetails } = this.state;
+        const { calendarDetails } = this.props;
         const month = this.months.indexOf(this.month()) + 1;
         const selectedDate = `${this.year()}-${month > 9 ? month : '0' + month}-${day > 9 ? day : '0' + day}`;
         this.oldValues = (calendarDetails && calendarDetails[selectedDate]) ? 
@@ -222,7 +221,7 @@ class Calendar extends Component {
             selectedDate: selectedDate,
             editContent: {...this.oldValues}
         }, () => {
-            if(this.state.today.startOf("day").isSameOrBefore(selectedDate)) {
+            if(this.state.today.startOf("day").isSameOrBefore(selectedDate) || calendarDetails[selectedDate]) {
                 this.setState({calendarErrorMsg: ''});
             } else {
                 this.setState({calendarErrorMsg: 'Cannot set targets on this date.', selectedDate: undefined});
@@ -235,7 +234,7 @@ class Calendar extends Component {
         const { selectedDate, editContent } = this.state;
         let { name, value } = event.target;
         try {
-            if(!this.state.today.startOf("day").isSame(selectedDate)) {
+            if(this.state.today.startOf("day").isBefore(selectedDate)) {
                 this.resetAlert();
                 if(value !== '') {
                     value = parseInt(value)
@@ -255,38 +254,7 @@ class Calendar extends Component {
         }
     }
 
-    outputValues(target) {
-        if(target.key === 'targeted_test_case') {
-            return(
-                <span>
-                    <input type="text" className="form-control" name={target.key} value={target.value} onChange={ this.handleChange.bind(this) } />
-                </span>
-            );
-        } else {
-            return(
-                <span style={{marginLeft: '10px'}}><label>{target.value}</label></span>
-            );
-        }
-    }
-
-    populateTarget() {
-        const targets = this.props.settings;
-        if(targets) {
-            const leftCol = {width: '50%', position: 'absolute'};
-            const rightCol = {width: '50%', position: 'inherit', marginLeft: '125px'};
-            return targets.map((target, i) => {
-                const key = target.key + "_1";
-                return (
-                <div key={key} style={ ((i % 2 == 0) ? leftCol : rightCol) }>
-                    <label style={{display: 'block', background: 'chartreuse', borderRadius: '5px', width: 'max-content'}}>{target.label}</label>
-                    { ((target) => <span style={{marginLeft: '10px'}}>{ target.value }</span>)(target) }
-                </div>);
-            });
-        }
-        return '';
-    }
-
-    populateCount() {
+    Edit() {
         const { editContent } = this.state;  
         const value = (field) => editContent[field.key] ? editContent[field.key] : '';
         return this.countFields.map(field => (
@@ -297,12 +265,12 @@ class Calendar extends Component {
                 </span>
             </div>
         ));
-   }
+    }
 
-    submitData() {
+    submit() {
         const { calendarDetails } = this.props;
         const { selectedDate, editContent } = this.state;
-        if(!this.state.today.startOf("day").isSame(selectedDate)) {
+        if(this.state.today.startOf("day").isBefore(selectedDate)) {
             const newValues = Object.entries(editContent)
                                     .filter(([key, value]) => !this.oldValues[key] && value)
                                     .map(([key, value]) => {
@@ -326,7 +294,7 @@ class Calendar extends Component {
             }
             if(updateValues && updateValues.length > 0) {
                 this.props.updateCalendarDetails(updateValues)
-                .then(() => this.addAlert());
+                    .then(() => this.addAlert());
             }
             this.oldValues = { ...this.oldValues, ...editContent };
         } else {
@@ -354,7 +322,7 @@ class Calendar extends Component {
         this.setState({alerts: []});
     }
 
-    populateAlert() {
+    Alert() {
         const { alerts } = this.state;
         let alertMsg = ''
         if(alerts) {
@@ -381,18 +349,17 @@ class Calendar extends Component {
                 <div className="col-md-6 col-md-offset-3">
                     <h3>Targets</h3>
                     <form name="settings" onSubmit={ this.handleSubmit.bind(this) }>
-                        { this.populateAlert() }
-                        { this.populateTarget() }
-                        { this.populateCount() }
+                        <this.Alert/>
+                        <Target targets={this.props.settings}/>
+                        <this.Edit/>
                         <div className="form-group" style={{marginTop: "1rem"}}>
                             <button className="btn btn-primary">Submit</button>
                         </div>
                     </form>
                 </div>
             );
-        } else {
-            return ('');
         }
+        return ('');
     }
 
     render() {
@@ -408,7 +375,7 @@ class Calendar extends Component {
             blanks.push(<td key={i * 80} className="emptySlot">{""}</td>);
         }
 
-        const { calendarDetails } = this.state;
+        const { calendarDetails } = this.props;
         const today = this.state.today.format("Y-MM-DD");
         let daysInMonth = [];
         for (let d = 1; d <= this.daysInMonth(); d++) {
@@ -455,8 +422,8 @@ class Calendar extends Component {
             <div className="grid-container">
                 <div className='grid-item'>
                     { (() => {
-                        if(this.state.calendarErrorMsg) 
-                            return <span className="alert-danger" style={{borderRadius: "4px", padding: "6px"}}>{this.state.calendarErrorMsg}</span>;
+                        return this.state.calendarErrorMsg &&
+                         <span className="alert-danger" style={{borderRadius: "4px", padding: "6px"}}>{this.state.calendarErrorMsg}</span>;
                     })()}
                     <table className="calendar">
                         <thead>
@@ -502,7 +469,7 @@ class Calendar extends Component {
                     <Modal.Footer>
                     <Button variant="primary" onClick={() => {
                         this.setState({updateMsg: ''});
-                        this.submitData();
+                        this.submit();
                     }}>Ok</Button>
                     <Button variant="primary" onClick={() => this.setState({updateMsg: ''})}>Cancel</Button>
                     </Modal.Footer>
