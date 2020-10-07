@@ -49,6 +49,7 @@ class Calendar extends Component {
         this.EditableSection = this.EditableSection.bind(this);
         this.Alert = this.Alert.bind(this);
         this.Edit = this.Edit.bind(this);
+        this.label = this.label.bind(this);
         this.state = {
             dateContext: moment(),
             today: moment(),
@@ -254,12 +255,17 @@ class Calendar extends Component {
         }
     }
 
+    label(val) {
+        return (val.split('_').map(l => (l.charAt(0).toUpperCase() + l.slice(1))).join(' ')  + " Count");
+    }
+
     Edit() {
         const { editContent } = this.state;  
+        const targets = this.props.settings
         const value = (field) => editContent[field.key] ? editContent[field.key] : '';
-        return this.countFields.map(field => (
+        return targets.map(field => (
             <div key={field.key} className='fields-group'>
-                <label htmlFor={field.key}>{ field.label }</label>
+                <label htmlFor={field.key}>{ this.label(field.key) }</label>
                 <span>
                     <input type="text" className="form-control" name={field.key} value={value(field)} onChange={ this.handleChange.bind(this) } />
                 </span>

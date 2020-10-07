@@ -252,11 +252,11 @@ def add_test_case():
                     query = '''
                         SELECT s.value, SUM(cd.value) AS aggregate 
                         FROM settings s 
-                        INNER JOIN calendar_details cd 
-                        WHERE s.name = %s AND cd.name = %s AND cd.dated <= %s
+                        INNER JOIN calendar_details cd on cd.name = s.name
+                        WHERE s.name = %s AND cd.dated <= %s
                     '''
                     field = (app_type + "_" + suite).lower()
-                    cur.execute(query, [(field), (field), dated.strftime('%Y-%m-%d'), ])
+                    cur.execute(query, [field, dated.strftime('%Y-%m-%d'), ])
                     try:
                         settings = cur.fetchone()
                         target = int(settings['value'])
@@ -270,9 +270,9 @@ def add_test_case():
                     '''
                     parameters = [ targeted_count, completed, passed, dated.strftime('%Y-%m-%d %H:%M:%S'), suite, app_type ]
             conn.cursor().execute(query, parameters)
-            conn.cursor().execute("delete from calendar_details where dated <= %s and name = %s", [dated.strftime('%Y-%m-%d'), (field), ])
+            conn.cursor().execute("delete from calendar_details where dated <= %s and name = %s", [dated.strftime('%Y-%m-%d'), field, ])
             if target != targeted_count and target is not None:
-                conn.cursor().execute("update settings set value = %s where name = %s", [targeted_count, (field), ])
+                conn.cursor().execute("update settings set value = %s where name = %s", [targeted_count, field, ])
             conn.commit()
         finally:
             if(conn and conn.open):

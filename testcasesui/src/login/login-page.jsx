@@ -48,7 +48,7 @@ class LoginPage extends Component {
                 <h2>Login</h2>
                 {(() => {
                     if(this.state.errorMsg) {
-                        return <div style={{ borderRadius: '4px' }} className="alert-danger">
+                        return <div style={{ borderRadius: '6px', padding: '2px 8px' }} className="alert-danger">
                             {this.state.errorMsg}
                         </div>
                     }
