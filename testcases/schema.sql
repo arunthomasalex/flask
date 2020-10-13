@@ -40,3 +40,8 @@ CREATE TABLE `calendar_details` (
 	`dated` DATE NOT NULL,
 	PRIMARY KEY (`id`)
 ) COLLATE='utf8_general_ci';
+
+UPDATE `settings` SET `name` = 'ui_smoke', `label` = 'UI Smoke';
+INSERT INTO `settings` (`name`, `label`, `value`) VALUES ('ui_regression', 'UI Regression', '0');
+INSERT INTO `settings` (`name`, `label`, `value`) VALUES ('headless_smoke', 'Headless Smoke', '0');
+INSERT INTO `settings` (`name`, `label`, `value`) VALUES ('headless_regression', 'Headless Regression', '0');
