@@ -252,11 +252,11 @@ def add_test_case():
                     query = '''
                         SELECT s.value, SUM(cd.value) AS aggregate 
                         FROM settings s 
-                        INNER JOIN calendar_details cd on cd.name = s.name
-                        WHERE s.name = %s AND cd.dated <= %s
+                        LEFT OUTER JOIN calendar_details cd on cd.name = s.name AND cd.dated <= %s
+                        WHERE s.name = %s
                     '''
                     field = (app_type + "_" + suite).lower()
-                    cur.execute(query, [field, dated.strftime('%Y-%m-%d'), ])
+                    cur.execute(query, [ dated.strftime('%Y-%m-%d'), field, ])
                     try:
                         settings = cur.fetchone()
                         target = int(settings['value'])
